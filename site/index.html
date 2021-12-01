@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en"><!-- saas -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des VMs</title>
+    <script src="/jquery-3.6.0.min.js"></script>
+    <script src="/fetch.umd.js"></script>
+    <script src="/js.cookie.min.js"></script>
+    <script src="/utils.js"></script>
+    <script src="/filter.js"></script>
+    <script src="/header.js" defer></script>
+    <script src="/index.js"></script>
+    <!-- Bootstrap -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script>
+    <link href="/index.css" rel="stylesheet">
+</head>
+<body style="margin-top: 100px">
+<div style="margin: 0 2% 0 2%;">
+    <table class="table m-auto">
+        <thead style="background: #4863ff;">
+        <tr>
+            <th class="text-white">Nom VM</th>
+            <th class="text-white">Serveur Hôte</th>
+            <th class="text-white">Durée de fonctionnement</th>
+            <th class="text-white">Arrêt planifié</th>
+            <th class="text-center text-white">Commanditaire</th>
+            <th class="text-center text-white"></th>
+        </tr>
+        </thead>
+        <tbody id="list"></tbody>
+    </table>
+</div>
+<!-- Popup -->
+<div class="modal" tabindex="-1" id="modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Démarrer une VM</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="name">Votre Nom</label>
+                <input type="text" class="form-control mb-3" id="name" value="">
+                <label>Durée de fonctionnement</label>
+                <div class="input-group">
+                    <input type="number" min="0" max="30" class="form-control" placeholder="0" id="days" value="14">
+                    <span class="input-group-text">jour(s)</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" id="modal-confirm">Démarrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" tabindex="-1" id="extend">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Replanifier l'arrêt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="name">Votre Nom</label>
+                <input type="text" class="form-control mb-3" id="nom" value="" required>
+                <label>Durée de fonctionnement</label>
+                <div class="input-group">
+                    <input type="number" min="0" max="30" class="form-control" placeholder="0" id="jours" value="7">
+                    <span class="input-group-text">jour(s)</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="extend-confirm">Reprogrammation</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" id="confirm-delete" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"> Suspendre la VM </div>
+            <div class="modal-body"> Êtes-vous sur de vouloir Suspendre cette Vm ? </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger btn-ok" id="stop">Suspendre</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Notification -->
+<div class="d-flex justify-content-center align-items-center w-100 fixed-top" style="margin-top: 100px;">
+    <div id="startToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header" style="background: lightgreen;">
+            <strong class="me-auto">Vm Démarrer</strong>
+            <small>2 sec Ago</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"> Success </div>
+    </div>
+</div>
+<div class="d-flex justify-content-center align-items-center w-100  fixed-top" style=" margin-top: 100px;">
+    <div id="stopToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header" style="background: lightgreen;">
+            <strong class="me-auto">Vm Suspendu</strong>
+            <small>2 sec Ago</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"> Success </div>
+    </div>
+</div>
+<div class="d-flex justify-content-center align-items-center w-100  fixed-top" style="margin-top: 100px;">
+    <div id="extendToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header" style="background: lightgreen;">
+            <strong class="me-auto">Vm Reprogrammer</strong>
+            <small>2 sec Ago</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"> Success </div>
+    </div>
+</div>
+<div class="d-flex justify-content-center align-items-center w-100 fixed-top" style="margin-top: 100px;">
+    <div id="errorToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header" style="background: lightcoral;">
+            <strong class="me-auto">Vm Error</strong>
+            <small>2 sec Ago</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"> Le temps n'est pas valide. </div>
+    </div>
+</div>
+</body>
+</html>

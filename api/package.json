@@ -1,0 +1,27 @@
+{
+  "name": "proxmox-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "Noe Lopez",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "fs": "^0.0.1-security",
+    "install": "^0.13.0",
+    "node-fetch": "^2.6.5",
+    "nodemon": "^2.0.12",
+    "npm": "^7.22.0",
+    "pvea": "https://github.com/kurusukono/pvea/tarball/master",
+    "sqlite": "^4.0.23",
+    "sqlite3": "^4.2.0",
+    "xhr": "^2.6.0",
+    "xhr2": "^0.2.1"
+  }
+}
