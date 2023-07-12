@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en"><!-- saas -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des VMs</title>
+    <script src="/utils/jquery-3.6.0.min.js"></script>
+    <script src="/utils/fetch.umd.js"></script>
+    <script src="/utils/js.cookie.min.js"></script>
+    <script src="/utils/js/utils.js"></script>
+    <script src="/component/filter.js"></script>
+    <script src="/component/header.js" defer></script>
+    <script src="/utils/js/index.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <link href="../utils/css/tailwind.css" rel="stylesheet">
+    <link rel="icon" href="../utils/vm.png">
+</head>
+<body>
+<div class="flex flex-col">
+    <div class="flex h-44 bg-white fixed top-0 w-full z-10"></div>
+    <div class="flex overflow-x-auto relative shadow-md sm:rounded-lg m-5 mt-36" id="table">
+        <table class="table flex w-full text-sm text-left text-gray-500 dark:text-gray-500">
+            <thead class="z-20 text-xs rounded-md flex w-full text-black uppercase bg-[#2c3e50] dark:bg-[#2c3e50] dark:text-black fixed text-sm text-left text-gray-500 dark:text-gray-500">
+            <tr class="w-full flex">
+                <th class="text-white py-3  text-center w-[5%]">Nom VM</th>
+                <th class="text-white py-3  text-center w-[19%]">Serveur Hôte</th>
+                <th class="text-white py-3  text-center w-[18%]">Durée de fonctionnement</th>
+                <th class="text-white py-3  text-center w-[21%]">Arrêt planifié</th>
+                <th class="text-center text-white py-3 w-[19%]">Commanditaire</th>
+                <th class="text-center text-white py-3 w-[20%]"></th>
+            </tr>
+            </thead>
+            <tbody id="list" style="width: inherit;" class="mt-12 block"></tbody>
+        </table>
+    </div>
+</div>
+<!-- Popup -->
+<iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+
+<div id="extend-modal" tabindex="-1"
+     class="fixed backdrop-blur-sm top-8 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-modal md:h-full">
+    <div class="relative w-full h-full max-w-md  m-auto md:h-auto">
+        <!-- Modal content -->
+        <div class="relative rounded-lg shadow bg-gray-700">
+            <button type="button" id="extend-cross"
+                    class="cross absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white"
+                    data-modal-toggle="authentication-modal">
+                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"></path>
+                </svg>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <div class="px-6 py-6 lg:px-8">
+                <h3 class="mb-4 text-xl font-medium text-white">Reprogrammer une VM</h3>
+                <form class="space-y-6" id="extend-form" target="dummyframe">
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-white">Votre Nom</label>
+                        <input type="text" name="text" id="extend-name" value=""
+                               class=" border text-sm rounded-lg block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-400 text-white"
+                               placeholder="Nom" required>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-white">Durée de
+                            fonctionnement</label>
+                        <input type="number" name="number" id="extend-days" min="0" max="30" value="7"
+                               class="border text-sm rounded-lg block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-400 text-white"
+                               required>
+                    </div>
+                    <div class="flex flex-row justify-center">
+                        <div class="text-white">Arrêt Plannifié le:</div>
+                        <div id="extend-date" class="text-white"></div>
+                    </div>
+                    <div id="extend-footer" class="flex justify-between">
+                        <button type="submit" id="extend"
+                                class="w-5/12 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800">
+                            Prolonger la Machine
+                        </button>
+                        <button id="extend-close" type="button"
+                                class="w-5/12  focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 text-gray-300 border-gray-500 hover:text-white hover:bg-gray-600 focus:ring-gray-600">
+                            Non, annuler
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="start-modal" tabindex="-1"
+     class="fixed backdrop-blur-sm top-8 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-modal md:h-full">
+    <div class="relative w-full h-full max-w-md  m-auto md:h-auto">
+        <!-- Modal content -->
+        <div class="relative rounded-lg shadow bg-gray-700">
+            <button type="button" id="start-cross"
+                    class="cross absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white"
+                    >
+                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"></path>
+                </svg>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <div class="px-6 py-6 lg:px-8">
+                <h3 class="mb-4 text-xl font-medium text-white">Démarrer une VM</h3>
+                <form class="space-y-6" id="startForm" target="dummyframe">
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-white">Votre Nom</label>
+                        <input type="text" name="text" id="start-name" value=""
+                               class=" border text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-400 text-white"
+                               placeholder="Nom" required>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-white">Durée de
+                            fonctionnement</label>
+                        <input type="number" name="number" id="start-days" min="0" max="30" value="14"
+                               class=" border text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-400 text-white"
+                               required>
+                    </div>
+                    <div class="flex flex-row justify-center">
+                        <div class="text-white">Arrêt Plannifié le:</div>
+                        <div id="start-date" class="text-white"></div>
+                    </div>
+                    <div id="start-footer" class="flex justify-between">
+                        <button type="submit" id="start"
+                                class="w-5/12 text-white  focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center bg-blue-600 hover:bg-blue-700 focus:ring-blue-800">
+                            Démarrer la Machine
+                        </button>
+                        <button id="start-close" type="button"
+                                class="w-5/12 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 bg-gray-700 text-gray-300 border-gray-500 hover:text-white hover:bg-gray-600 focus:ring-gray-600">
+                            Non, annuler
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="stop-modal" tabindex="-1"
+     class="backdrop-blur-sm fixed top-8 left-0 right-0 z-50 hidden p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-modal md:h-screen">
+    <div class="relative w-full h-full max-w-md md:h-auto m-auto">
+        <div class="relative mt-44 rounded-lg shadow bg-gray-700">
+            <button type="button" id="cross"
+                    class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white"
+                    data-modal-toggle="popup-modal">
+                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"></path>
+                </svg>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <div class="p-6 text-center">
+                <svg aria-hidden="true" class="mx-auto mb-4 w-14 h-14 text-gray-200" fill="none"
+                     stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h3 class="mb-5 text-lg font-normal text-gray-400">Êtes-vous sur de vouloir Suspendre
+                    cette Vm ?</h3>
+                <button data-modal-toggle="popup-modal" id="stop" type="button"
+                        class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center mr-2">
+                    Suspendre
+                </button>
+                <button id="closeModal" type="button"
+                        class="focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 bg-gray-700 text-gray-300 border-gray-500 hover:text-white hover:bg-gray-600 dark:focus:ring-gray-600">
+                    Non, annuler
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification -->
+<div id="toast-success" tabindex="-1"
+     class="flex fixed hidden top-5 right-5 items-center z-20 p-4 mb-4 w-full max-w-xs text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800"
+     role="alert">
+    <div class="inline-flex animate-bounce flex-shrink-0 justify-center items-center w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200">
+        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+             xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"></path>
+        </svg>
+        <span class="sr-only">Check icon</span>
+    </div>
+    <div class="ml-3 text-sm font-normal">Action Success.</div>
+</div>
+<div id="toast-danger" tabindex="-1"
+     class="flex fixed hidden top-5 right-5 items-center z-20 p-4 mb-4 w-full max-w-xs text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800"
+     role="alert">
+    <div class="inline-flex  flex-shrink-0 animate-bounce justify-center items-center w-8 h-8 text-red-500 bg-red-100 rounded-lg dark:bg-red-800 dark:text-red-200">
+        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+             xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"></path>
+        </svg>
+        <span class="sr-only">Error icon</span>
+    </div>
+    <div class="ml-3 text-sm font-normal">Action Failed.</div>
+</div>
+</body>
+</html>

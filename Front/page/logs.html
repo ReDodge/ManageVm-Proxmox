@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs</title>
+    <script src="../utils/jquery-3.6.0.min.js"></script>
+    <script src="../utils/fetch.umd.js"></script>
+    <script src="../utils/js.cookie.min.js"></script>
+    <script src="../utils/js/utils.js"></script>
+    <script src="../component/filter.js"></script>
+    <script src="../component/header.js" defer></script>
+    <script src="../utils/js/log.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <link href="../utils/css/tailwind.css" rel="stylesheet">
+    <link rel="icon" href="../utils/vm.png">
+</head>
+
+<body style="margin-top: 150px">
+<div class="overflow-x-auto relative shadow-md sm:rounded-lg m-5">
+    <table class="table w-full text-sm text-left text-gray-500 dark:text-gray-500">
+        <thead class="text-xs text-black uppercase bg-[#2c3e50] dark:bg-[#2c3e50] dark:text-black">
+        <tr>
+            <th class="text-white py-3 px-6">Time</th>
+            <th class="text-white py-3 px-6">VmId</th>
+            <th class="text-white py-3 px-6">Node</th>
+            <th class="text-white py-3 px-6">vmName</th>
+            <th class="text-white py-3 px-6">Actions</th>
+            <th class="text-white py-3 px-6">Commanditaire</th>
+            <th class="text-white py-3 px-6">PC</th>
+        </tr>
+        </thead>
+        <tbody id="list"></tbody>
+    </table>
+</div>
+<button id="more" class='text-white bg-[#2980b9] hover:bg-purple-800 focus:outline-none ml-3 focus:ring-4 focus:ring-purple-300 font-medium rounded-md text-sm px-3 py-1.5 text-center mb-2 dark:bg-[#2980b9] dark:hover:bg-purple-700 dark:focus:ring-purple-900' onClick="onClick()">Show More</button>
+</body>
+</html>
